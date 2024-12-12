@@ -21,16 +21,14 @@ public class RouteLocatorConfig {
 
 
         return builder.routes()
-                .route("account-api",
+                .route("authentication-api",
                         p->p.path("/api/users/**")
-                                .filters(f->f.filter(jwtAuthorizationHeaderFilter.apply(new JwtAuthorizationHeaderFilter.Config())))
-                                .uri("lb://ACCOUNT-SERVICE")
+                                .uri("lb://AUTHENTICATION-API")
                 )
                 .route("shop-api",
-                        p -> p.path("/api/test/**").and()
+                        p -> p.path("/api/test/**")
+                                .filters(f->f.filter(jwtAuthorizationHeaderFilter.apply(new JwtAuthorizationHeaderFilter.Config())))
                                 .uri("lb://SHOP-API"))
                 .build();
     }
 }
-// /api/books/~~
-// /api/orders/~~
