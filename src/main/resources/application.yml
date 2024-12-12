@@ -27,6 +27,8 @@ spring:
   jwt:
     secret: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
 
+
+
 logging:
   level:
     root: debug

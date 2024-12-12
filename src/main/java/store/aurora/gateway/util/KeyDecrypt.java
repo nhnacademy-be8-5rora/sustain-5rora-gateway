@@ -1,5 +1,6 @@
 package store.aurora.gateway.util;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.Cipher;
@@ -8,24 +9,18 @@ import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
 
 @Component
+@Slf4j
 public class KeyDecrypt {
 
-    private final static String alg = "AES/CBC/PKCS5Padding";
-    private final static String key = "MyTestCode-32CharacterTestAPIKey"; // todo : 따로 빼기
-    private final static String iv = key.substring(0, 16);
+    private static final String ALGORITHM = "AES";
+    private static final String SECRET_KEY = "YourSecretKeyKey";
 
-    public String decrypt(String clientKey) {
-        try {
-            Cipher cipher = Cipher.getInstance(alg);
-            SecretKeySpec keySpec = new SecretKeySpec(key.getBytes(), "AES");
-            IvParameterSpec ivParameterSpec = new IvParameterSpec(iv.getBytes());
-            cipher.init(Cipher.DECRYPT_MODE, keySpec, ivParameterSpec);
-
-            byte[] decoedBytes = Base64.getDecoder().decode(clientKey.getBytes());
-            byte[] decrypted = cipher.doFinal(decoedBytes);
-            return new String(decrypted).trim();
-        } catch (Exception e) {
-            throw new RuntimeException(String.format("복호화 처리중에 에러가 발생했습니다. e = %s", e.getMessage()));
-        }
+    public static String decrypt(String encryptedInput) throws Exception {
+        SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), ALGORITHM);
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, keySpec);
+        byte[] encryptedBytes = Base64.getDecoder().decode(encryptedInput);
+        byte[] decryptedBytes = cipher.doFinal(encryptedBytes);
+        return new String(decryptedBytes);
     }
 }

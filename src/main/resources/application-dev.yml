@@ -1,0 +1,22 @@
+#eureka:
+#  client:
+#    enabled: false
+
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: authentication-api
+          uri: lb://AUTHENTICATION-API
+          predicates:
+            - Path=/api/auth/**
+
+        - id: shop-api
+          uri: lb://SHOP-API
+          predicates:
+            - Path=/api/test/**
+          filters:
+            - name: JwtAuthorizationHeaderFilter
+              args:
+                secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"

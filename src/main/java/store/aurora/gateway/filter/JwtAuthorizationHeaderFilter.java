@@ -3,40 +3,48 @@ package store.aurora.gateway.filter;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.server.RequestPath;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
-
-import java.net.URI;
-
+import store.aurora.gateway.util.KeyDecrypt;
 
 @Component
 @Slf4j
 public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<JwtAuthorizationHeaderFilter.Config> {
 
-    @Value("${spring.jwt.secret}")
-    private String secretKey;
+    private final KeyDecrypt keyDecrypt;
 
-    public JwtAuthorizationHeaderFilter() {
+//    @Value("${spring.jwt.secret}")
+//    private String secretKey;
+
+
+    public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
         super(Config.class);
+        this.keyDecrypt = keyDecrypt;
     }
 
+    @Getter
+    @Setter
     public static class Config {
-        // application.yml 파일에서 지정한 filer의 Argument값을 받는 부분
+        private String secretKey;
     }
 
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             log.debug("jwt-validation-filter");
+            log.debug("config-secretKey: {}", config.getSecretKey());
             ServerHttpRequest request = exchange.getRequest();
 
             String path = request.getURI().getPath();
@@ -46,7 +54,6 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
             }
 
 
-            // Authorization 헤더가 없는 경우
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 log.error("Missing Authorization Header");
                 return handleUnauthorized(exchange);
@@ -59,17 +66,21 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
                 return handleUnauthorized(exchange);
             }
 
-            // AccessToken 추출
             String token = authHeader.substring("Bearer ".length());
             log.debug("token: {}", token);
 
-            try {
-                // JWT 검증
-                Claims claims = validateToken(token);
 
-                // 검증 완료 후 사용자 정보를 Request에 추가
+            try {
+                Claims claims = validateToken(token, config.getSecretKey());
+                log.debug("claims-name: {}", claims.get("username"));
+
+
+                String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
+                log.debug("decryptKey: {}", decryptKey);
+
+
                 exchange = exchange.mutate()
-                        .request(builder -> builder.header("X-USER-ID", claims.getSubject()))
+                        .request(builder -> builder.header("X-USER-ID", decryptKey))
                         .build();
 
                 log.debug("JWT validated for user: {}", claims.getSubject());
@@ -83,7 +94,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
         };
     }
 
-    private Claims validateToken(String token) {
+    private Claims validateToken(String token, String secretKey) {
         return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
                 .build()
