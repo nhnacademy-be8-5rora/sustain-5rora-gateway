@@ -26,9 +26,9 @@ public class RouteLocatorConfig {
                                 .filters(f->f.filter(jwtAuthorizationHeaderFilter.apply(new JwtAuthorizationHeaderFilter.Config())))
                                 .uri("lb://ACCOUNT-SERVICE")
                 )
-                .route("book-api",
-                        p -> p.path("/api/books/**").and()
-                                .uri("lb://SHOPPINGMALL-SERVICE"))
+                .route("shop-api",
+                        p -> p.path("/api/test/**").and()
+                                .uri("lb://SHOP-API"))
                 .build();
     }
 }

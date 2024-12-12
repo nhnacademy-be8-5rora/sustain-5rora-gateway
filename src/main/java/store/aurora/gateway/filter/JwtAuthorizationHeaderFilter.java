@@ -30,7 +30,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
     }
 
     public static class Config {
-        // application.properties 파일에서 지정한 filer의 Argument값을 받는 부분
+        // application.yml 파일에서 지정한 filer의 Argument값을 받는 부분
     }
 
     @Override
