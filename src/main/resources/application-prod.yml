@@ -1,3 +1,21 @@
 logging:
   level:
     org.springframework.web: WARN
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: authentication-api
+          uri: lb://AUTHENTICATION-API
+          predicates:
+            - Path=/api/auth/**
+
+        - id: shop-api
+          uri: lb://SHOP-API
+          predicates:
+            - Path=/api/cart/**
+          filters:
+            - name: JwtAuthorizationHeaderFilter
+              args:
+                secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"

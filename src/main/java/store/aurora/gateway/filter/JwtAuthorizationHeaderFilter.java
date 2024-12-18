@@ -55,6 +55,9 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
 
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                if(path.contains("cart")) {
+                    return chain.filter(exchange);
+                }
                 log.error("Missing Authorization Header");
                 return handleUnauthorized(exchange);
             }

@@ -13,7 +13,7 @@ import java.util.Base64;
 public class KeyDecrypt {
 
     private static final String ALGORITHM = "AES";
-    private static final String SECRET_KEY = "YourSecretKeyKey";
+    private static final String SECRET_KEY = "YourSecretKeyKey"; // todo 숨기기
 
     public static String decrypt(String encryptedInput) throws Exception {
         SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), ALGORITHM);
