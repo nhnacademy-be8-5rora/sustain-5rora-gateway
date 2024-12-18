@@ -1,0 +1,48 @@
+<configuration>
+
+    <!-- LogNCrashHttpAppender 선언 -->
+    <appender name="logNCrashHttp" class="com.toast.java.logncrash.logback.LogNCrashHttpAppender">
+        <appKey>nMWnKdBvAFvUW8XL</appKey>
+        <logSource>5rora</logSource>
+        <version>1.0.0</version>
+        <logType>운영</logType>
+        <debug>true</debug>
+        <category>5rora-store</category>
+        <errorCodeType>default</errorCodeType>
+    </appender>
+
+    <!-- LogNCrashHttpAppender를 포함한 AsyncAppender 선언 -->
+    <appender name="LNCS-APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+        <!-- Logback의 AsyncAppender 옵션 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <includeCallerData value="false"/>
+        <queueSize value="2048"/>
+        <neverBlock value="true"/>
+        <maxFlushTime value="60000"/>
+        <appender-ref ref="logNCrashHttp"/>
+    </appender>
+
+    <!-- ConsoleAppender 선언 -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- 로거 선언 -->
+    <logger name="user-logger" additivity="false">
+        <!-- LogNCrashHttpAppender로 로그 전송 -->
+        <appender-ref ref="LNCS-APPENDER"/>
+        <!-- ConsoleAppender로 로그 전송 -->
+        <appender-ref ref="CONSOLE"/>
+    </logger>
+
+    <!-- Root Logger 설정 -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+
+</configuration>
