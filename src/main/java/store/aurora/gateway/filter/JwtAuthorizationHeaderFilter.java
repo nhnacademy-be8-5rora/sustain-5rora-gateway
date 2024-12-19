@@ -50,7 +50,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             String path = request.getURI().getPath();
 
-            if (path.contains("login")) {
+            if (path.contains("login") || path.startsWith("/api/users/auth/")) { // todo : /api/users/auth/ 수정
                 return chain.filter(exchange);
             }
 
