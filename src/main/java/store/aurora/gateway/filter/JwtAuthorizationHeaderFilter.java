@@ -7,6 +7,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -25,9 +27,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
     private final KeyDecrypt keyDecrypt;
 
-//    @Value("${spring.jwt.secret}")
-//    private String secretKey;
-
+//    private static final Logger USER_LOG = LoggerFactory.getLogger("user-logger");
 
     public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
         super(Config.class);
@@ -50,51 +50,51 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             String path = request.getURI().getPath();
 
-            if (path.contains("login") || path.startsWith("/api/users/auth/")) { // todo : /api/users/auth/ 수정
-                return chain.filter(exchange);
-            }
-
-
-            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                if(path.contains("cart")) {
-                    return chain.filter(exchange);
-                }
-                log.error("Missing Authorization Header");
-                return handleUnauthorized(exchange);
-            }
-
-            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                log.error("Invalid Authorization Header");
-                return handleUnauthorized(exchange);
-            }
-
-            String token = authHeader.substring("Bearer ".length());
-            log.debug("token: {}", token);
-
-
-            try {
-                Claims claims = validateToken(token, config.getSecretKey());
-                log.debug("claims-name: {}", claims.get("username"));
-
-
-                String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
-                log.debug("decryptKey: {}", decryptKey);
-
-
-                exchange = exchange.mutate()
-                        .request(builder -> builder.header("X-USER-ID", decryptKey))
-                        .build();
-
-                log.debug("JWT validated for user: {}", claims.getSubject());
-
-            } catch (Exception e) {
-                log.error("Invalid JWT: {}", e.getMessage());
-                return handleUnauthorized(exchange);
-            }
-
+            // todo 인증이 필요한 곳만 검사하고 나머지는 다 통과하게 해야 함
+//            USER_LOG.debug("gateway 통과");
             return chain.filter(exchange);
+
+
+//            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+//                if(path.contains("cart")) {
+//                    return chain.filter(exchange);
+//                }
+//                log.error("Missing Authorization Header");
+//                return handleUnauthorized(exchange);
+//            }
+//
+//            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+//
+//            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+//                log.error("Invalid Authorization Header");
+//                return handleUnauthorized(exchange);
+//            }
+//
+//            String token = authHeader.substring("Bearer ".length());
+//            log.debug("token: {}", token);
+//
+//
+//            try {
+//                Claims claims = validateToken(token, config.getSecretKey());
+//                log.debug("claims-name: {}", claims.get("username"));
+//
+//
+//                String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
+//                log.debug("decryptKey: {}", decryptKey);
+//
+//
+//                exchange = exchange.mutate()
+//                        .request(builder -> builder.header("X-USER-ID", decryptKey))
+//                        .build();
+//
+//                log.debug("JWT validated for user: {}", claims.getSubject());
+//
+//            } catch (Exception e) {
+//                log.error("Invalid JWT: {}", e.getMessage());
+//                return handleUnauthorized(exchange);
+//            }
+//
+//            return chain.filter(exchange);
         };
     }
 
