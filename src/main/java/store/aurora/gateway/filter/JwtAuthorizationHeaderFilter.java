@@ -47,6 +47,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
             log.debug("config-secretKey: {}", config.getSecretKey());
             ServerHttpRequest request = exchange.getRequest();
 
+
             String path = request.getURI().getPath();
 
             if (path.contains("login")) {

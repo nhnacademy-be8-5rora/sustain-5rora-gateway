@@ -11,7 +11,7 @@ spring:
         - id: shop-api
           uri: lb://SHOP-API
           predicates:
-            - Path=/api/cart/**
+            - Path=/api/cart/**, /api/users/**
           filters:
             - name: JwtAuthorizationHeaderFilter
               args:
