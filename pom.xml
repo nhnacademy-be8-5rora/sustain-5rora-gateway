@@ -88,8 +88,6 @@
             <groupId>com.toast.java.logncrash.logback</groupId>
             <artifactId>logncrash-java-sdk3</artifactId>
             <version>3.0.5</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/libs/toast-logncrash-logback-sdk-3.0.5.jar</systemPath>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
