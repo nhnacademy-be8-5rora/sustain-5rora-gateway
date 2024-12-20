@@ -27,6 +27,16 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+
+    - name: Install custom JAR
+      run: |
+        mvn install:install-file \
+          -Dfile=libs/toast-logncrash-logback-sdk-3.0.5.jar \
+          -DgroupId=com.toast.java.logncrash.logback \
+          -DartifactId=logncrash-java-sdk3 \
+          -Dversion=3.0.5 \
+          -Dpackaging=jar  
+
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
