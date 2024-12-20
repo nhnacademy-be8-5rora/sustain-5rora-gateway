@@ -23,7 +23,7 @@ spring:
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jwt:
-    sec ret: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
+    secret: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
 
 
 
