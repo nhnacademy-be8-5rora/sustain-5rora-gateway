@@ -1,5 +1,4 @@
 #spring.application.name=gateway
-#server.port=8082
 #
 #logging.level.root=debug
 #
@@ -13,7 +12,6 @@
 #spring.jwt.secret = "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
 
 server:
-  port: 8082
   shutdown: graceful
 
 

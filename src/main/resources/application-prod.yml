@@ -1,3 +1,5 @@
+server:
+  port: 9180
 
 spring:
   cloud:
