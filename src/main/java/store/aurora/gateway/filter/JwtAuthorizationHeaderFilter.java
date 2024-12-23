@@ -21,6 +21,8 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import store.aurora.gateway.util.KeyDecrypt;
 
+import java.util.List;
+
 @Component
 @Slf4j
 public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<JwtAuthorizationHeaderFilter.Config> {
@@ -28,6 +30,8 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
     private final KeyDecrypt keyDecrypt;
 
     private static final Logger USER_LOG = LoggerFactory.getLogger("user-logger");
+
+    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me"); //인증이 필요한 uri 추가
 
     public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
         super(Config.class);
@@ -50,50 +54,53 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             String path = request.getURI().getPath();
 
-            // todo 인증이 필요한 곳만 검사하고 나머지는 다 통과하게 해야 함
-            if(path.equals("/api/users/auth/me")){ //일단은 인증 필요한 api추가
-
-                if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                    log.error("Missing Authorization Header");
-                    return handleUnauthorized(exchange);
-                }
-
-                String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
-
-                if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                    log.error("Invalid Authorization Header");
-                    return handleUnauthorized(exchange);
-                }
-
-                String token = authHeader.substring("Bearer ".length());
-                log.debug("token: {}", token);
-
-
-                try {
-                    Claims claims = validateToken(token, config.getSecretKey());
-                    log.debug("claims-name: {}", claims.get("username"));
-
-
-                    String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
-                    log.debug("decryptKey: {}", decryptKey);
-
-
-                    exchange = exchange.mutate()
-                            .request(builder -> builder.header("X-USER-ID", decryptKey))
-                            .build();
-
-                    log.debug("JWT validated for user: {}", claims.getSubject());
-
-                } catch (Exception e) {
-                    log.error("Invalid JWT: {}", e.getMessage());
-                    return handleUnauthorized(exchange);
-                }
-
+            // todo 인증이 필요하지 않은 uri는 통과
+            //인증 x
+            if(!AUTHENTICATION_URI.contains(path)){
+                USER_LOG.debug("gateway 통과");
                 return chain.filter(exchange);
             }
 
-            USER_LOG.debug("gateway 통과");
+
+            //인증 o
+            if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                log.error("Missing Authorization Header");
+                return handleUnauthorized(exchange);
+            }
+
+            String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                log.error("Invalid Authorization Header");
+                return handleUnauthorized(exchange);
+            }
+
+            String token = authHeader.substring("Bearer ".length());
+            log.debug("token: {}", token);
+
+
+            try {
+                Claims claims = validateToken(token, config.getSecretKey());
+                log.debug("claims-name: {}", claims.get("username"));
+
+
+                String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
+                log.debug("decryptKey: {}", decryptKey);
+
+
+                exchange = exchange.mutate()
+                        .request(builder -> builder.header("X-USER-ID", decryptKey))
+                        .build();
+
+                log.debug("JWT validated for user: {}", claims.getSubject());
+
+            } catch (Exception e) {
+                log.error("Invalid JWT: {}", e.getMessage());
+                return handleUnauthorized(exchange);
+            }
+
             return chain.filter(exchange);
+
         };
     }
 
