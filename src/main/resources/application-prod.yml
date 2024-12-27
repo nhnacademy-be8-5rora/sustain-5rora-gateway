@@ -1,20 +1,2 @@
 server:
   port: 9180
-
-spring:
-  cloud:
-    gateway:
-      routes:
-        - id: authentication-api
-          uri: lb://AUTHENTICATION-API
-          predicates:
-            - Path=/api/auth/**
-
-        - id: shop-api
-          uri: lb://SHOP-API
-          predicates:
-            - Path=/api/cart/**, /api/users/**, /api/books/**, /api/point-policies/**
-          filters:
-            - name: JwtAuthorizationHeaderFilter
-              args:
-                secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
