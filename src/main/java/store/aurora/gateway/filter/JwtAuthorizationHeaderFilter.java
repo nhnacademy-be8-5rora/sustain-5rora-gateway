@@ -31,7 +31,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
     private static final Logger USER_LOG = LoggerFactory.getLogger("user-logger");
 
-    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me"); //인증이 필요한 uri 추가
+    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me", "/api/cart"); //인증이 필요한 uri 추가 // todo pathvariable 있는 uri는??
 
     public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
         super(Config.class);
@@ -64,6 +64,10 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             //인증 o
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                if(path.startsWith("/api/cart")) {
+                    log.debug("로그인 안 한 사용자 장바구니 요청");
+                    return chain.filter(exchange);
+                }
                 log.error("Missing Authorization Header");
                 return handleUnauthorized(exchange);
             }
