@@ -34,6 +34,11 @@ spring:
           predicates:
             - Path=/api/auth/**
 
+        - id: coupon-api
+          uri: lb://COUPON-API
+          predicates: #사용자 쿠폰 목록 리스트(List<UserCouponDTO>), 결제창에서 사용가능 쿠폰 목록명(List<String>)
+            - Path=/api/coupon/**
+
         - id: shop-api
           uri: lb://SHOP-API
           predicates:
@@ -42,6 +47,7 @@ spring:
             - name: JwtAuthorizationHeaderFilter
               args:
                 secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
+
 
 eureka:
   client:
