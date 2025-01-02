@@ -56,7 +56,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             // todo 인증이 필요하지 않은 uri는 통과
             //인증 x
-            if(!AUTHENTICATION_URI.contains(path) && !path.startsWith("/api/points") && !path.startsWith("/api/coupon")){
+            if(!AUTHENTICATION_URI.contains(path) && !path.startsWith("/api/points") && !path.startsWith("/api/coupon") && !path.startsWith("/api/books/likes")){
                 USER_LOG.debug("gateway 통과");
                 return chain.filter(exchange);
             }
