@@ -20,7 +20,7 @@ spring:
   application:
     name: gateway
   profiles:
-    active: dev
+    active: prod
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jwt:
@@ -46,7 +46,7 @@ spring:
         - id: shop-api
           uri: lb://SHOP-API
           predicates:
-            - Path=/api/cart/**, /api/users/**, /api/books/**, /api/points/**, /api/categories/**
+            - Path=/api/cart/**, /api/users/**, /api/books/**, /api/points/**, /api/categories/**, /api/tags/**, /api/addresses/**
           filters:
             - name: JwtAuthorizationHeaderFilter
               args:
