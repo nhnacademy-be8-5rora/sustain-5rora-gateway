@@ -20,7 +20,7 @@ spring:
   application:
     name: gateway
   profiles:
-    active: prod
+    active: dev
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jwt:
