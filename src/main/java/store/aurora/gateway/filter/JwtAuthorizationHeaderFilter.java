@@ -28,7 +28,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
     private static final Logger USER_LOG = LoggerFactory.getLogger("user-logger");
 
-    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me", "/api/cart"); //인증이 필요한 uri 추가 // todo pathvariable 있는 uri는??
+    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me", "/api/books/search"); //인증이 필요한 uri 추가 // todo pathvariable 있는 uri는??
 
     public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
         super(Config.class);
@@ -54,9 +54,10 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
             // todo 인증이 필요하지 않은 uri는 통과
             //인증 x
             if(!AUTHENTICATION_URI.contains(path)
-                    && !path.startsWith("/api/points") && !path.startsWith("/api/addresses")
+                    && !path.startsWith("/api/points/history") && !path.startsWith("/api/addresses") && !path.startsWith("/api/cart")
                     && !path.startsWith("/api/coupon")
-                    && !path.startsWith("/api/books/likes")){
+                    && !path.startsWith("/api/books/likes")
+            ){
 
                 USER_LOG.debug("gateway 통과");
                 return chain.filter(exchange);
@@ -67,6 +68,10 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
                 if(path.startsWith("/api/cart")) {
                     log.debug("로그인 안 한 사용자 장바구니 요청");
+                    return chain.filter(exchange);
+                }
+                if(path.startsWith("/api/books/search")) {
+                    log.debug("로그인 안 한 사용자 조회 요청");
                     return chain.filter(exchange);
                 }
                 log.error("Missing Authorization Header");
