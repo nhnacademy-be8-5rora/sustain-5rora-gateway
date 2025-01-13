@@ -66,6 +66,9 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
 
             //인증 o
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
+                if(path.startsWith("/api/coupon/admin")) {
+                    return chain.filter(exchange);
+                }
                 if(path.startsWith("/api/cart")) {
                     log.debug("로그인 안 한 사용자 장바구니 요청");
                     return chain.filter(exchange);
