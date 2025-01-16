@@ -47,10 +47,13 @@ spring:
           uri: lb://SHOP-API
           predicates:
             - Path=/api/cart/**, /api/users/**, /api/books/**, /api/points/**, /api/categories/**, /api/tags/**, /api/addresses/**, /api/order/**, /api/aladin/**, /api/admin/**, /api/reviews/**
+            - Path=/api/cart/**, /api/users/**, /api/books/**, /api/points/**, /api/categories/**, /api/tags/**,
+              /api/addresses/**, /api/order/**, /api/aladin/**, /api/publishers/**, /api/series/**,
           filters:
             - name: JwtAuthorizationHeaderFilter
               args:
                 secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
+
 
 
 eureka:
