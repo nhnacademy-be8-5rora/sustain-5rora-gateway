@@ -48,7 +48,7 @@ spring:
           predicates:
             - Path=/api/cart/**, /api/users/**, /api/books/**, /api/points/**, /api/categories/**, /api/tags/**,
               /api/addresses/**, /api/order/**, /api/aladin/**, /api/publishers/**, /api/series/**, /api/reviews/**,
-              /api/admin/**
+              /api/admin/**, /api/authors/**, /api/author-roles/**
           filters:
             - name: JwtAuthorizationHeaderFilter
               args:
