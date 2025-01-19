@@ -33,6 +33,10 @@ spring:
           uri: lb://AUTHENTICATION-API
           predicates:
             - Path=/api/auth/**
+          filters:
+            - name: JwtAuthorizationHeaderFilter
+              args:
+                secretKey: "vmfhaltmskdlstkfkdgodyroqkfwkdbalroqkfwkdbalaaaaaaaaaaaaaaaabbbbb"
 
         - id: coupon-api
           uri: lb://COUPON-API

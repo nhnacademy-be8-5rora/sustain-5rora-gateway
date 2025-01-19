@@ -1,11 +1,11 @@
 package store.aurora.gateway.filter;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -21,18 +21,16 @@ import store.aurora.gateway.util.KeyDecrypt;
 import java.util.List;
 
 @Component
-@Slf4j
 public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<JwtAuthorizationHeaderFilter.Config> {
 
-    private final KeyDecrypt keyDecrypt;
+    private static final Logger LOG = LoggerFactory.getLogger("user-logger");
+    public static final String REFRESH_TOKEN = "refresh";
+    public static final String USERNAME = "username";
 
-    private static final Logger USER_LOG = LoggerFactory.getLogger("user-logger");
+    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me", "/api/books/search", "/api/auth/refresh"); //인증이 필요한 uri 추가 // todo pathvariable 있는 uri는??
 
-    private static final List<String> AUTHENTICATION_URI = List.of("/api/users/auth/me", "/api/books/search"); //인증이 필요한 uri 추가 // todo pathvariable 있는 uri는??
-
-    public JwtAuthorizationHeaderFilter(KeyDecrypt keyDecrypt) {
+    public JwtAuthorizationHeaderFilter() {
         super(Config.class);
-        this.keyDecrypt = keyDecrypt;
     }
 
     @Getter
@@ -44,8 +42,8 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            log.debug("jwt-validation-filter");
-            log.debug("config-secretKey: {}", config.getSecretKey());
+            LOG.debug("jwt-validation-filter");
+            LOG.debug("config-secretKey: {}", config.getSecretKey());
             ServerHttpRequest request = exchange.getRequest();
 
 
@@ -59,63 +57,90 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
                     && !path.startsWith("/api/books/likes")
             ){
 
-                USER_LOG.debug("gateway 통과");
+                LOG.debug("gateway 통과");
                 return chain.filter(exchange);
             }
 
+            // access 토큰 재발급 요청인 경우
+            if (path.equals("/api/auth/refresh")) {
+                if (!request.getHeaders().containsKey(REFRESH_TOKEN)) {
+                    LOG.error("Missing {} Header", REFRESH_TOKEN);
+                    return handleUnauthorized(exchange);
+                }
+
+                String refreshToken = request.getHeaders().getFirst(REFRESH_TOKEN);
+
+                if (refreshToken == null) {
+                    LOG.error("Invalid {} Header", REFRESH_TOKEN);
+                    return handleUnauthorized(exchange);
+                }
+
+                try {
+                    // 1. 검증 (토큰 만료 여부도 확인)
+                    Claims claims = validateToken(refreshToken, config.getSecretKey());
+                    LOG.debug("claims-name: {}", claims.get(USERNAME));
+
+                    String decryptKey = KeyDecrypt.decrypt((String) claims.get(USERNAME));
+                    LOG.debug("decryptKey: {}", decryptKey);
+
+                    exchange = exchange.mutate()
+                            .request(builder -> builder.header("X-USER-ID", decryptKey))
+                            .build();
+
+                    LOG.debug("refresh token validated for user: {}", claims.getSubject());
+                    return chain.filter(exchange);
+                } catch (ExpiredJwtException e) {
+                    LOG.info("refresh token expired: {}", e.getMessage());
+                } catch (Exception e) {
+                    LOG.error("access 토큰 재발급 중 에러 발생 : {}", e.getMessage());
+                }
+                return handleUnauthorized(exchange);
+            }
 
             //인증 o
             if (!request.getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
-                if(path.startsWith("/api/coupon/shop")) {
+                if (path.startsWith("/api/coupon/shop")
+                    || path.startsWith("/api/coupon/admin")
+                    || path.startsWith("/api/coupon/signup/welcome")
+                    || path.startsWith("/api/cart")
+                    || path.startsWith("/api/books/search")
+                ) {
+                    LOG.debug("로그인 안 한 사용자가 {} 요청", path);
                     return chain.filter(exchange);
                 }
 
-                if(path.startsWith("/api/coupon/admin")) {
-                    return chain.filter(exchange);
-                }
-                if(path.startsWith("/api/coupon/signup/welcome")){
-                    return chain.filter(exchange);
-                }
-                if(path.startsWith("/api/cart")) {
-                    log.debug("로그인 안 한 사용자 장바구니 요청");
-                    return chain.filter(exchange);
-                }
-                if(path.startsWith("/api/books/search")) {
-                    log.debug("로그인 안 한 사용자 조회 요청");
-                    return chain.filter(exchange);
-                }
-                log.error("Missing Authorization Header");
+                LOG.error("Missing {} Header", HttpHeaders.AUTHORIZATION);
                 return handleUnauthorized(exchange);
             }
 
             String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
 
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                log.error("Invalid Authorization Header");
+                LOG.error("Invalid Authorization Header");
                 return handleUnauthorized(exchange);
             }
 
             String token = authHeader.substring("Bearer ".length());
-            log.debug("token: {}", token);
+            LOG.debug("token: {}", token);
 
 
             try {
                 Claims claims = validateToken(token, config.getSecretKey());
-                log.debug("claims-name: {}", claims.get("username"));
+                LOG.debug("claims-name: {}", claims.get(USERNAME));
 
 
-                String decryptKey = keyDecrypt.decrypt((String) claims.get("username"));
-                log.debug("decryptKey: {}", decryptKey);
+                String decryptKey = KeyDecrypt.decrypt((String) claims.get(USERNAME));
+                LOG.debug("decryptKey: {}", decryptKey);
 
 
                 exchange = exchange.mutate()
                         .request(builder -> builder.header("X-USER-ID", decryptKey))
                         .build();
 
-                log.debug("JWT validated for user: {}", claims.getSubject());
+                LOG.debug("access token validated for user: {}", claims.getSubject());
 
             } catch (Exception e) {
-                log.error("Invalid JWT: {}", e.getMessage());
+                LOG.error("Invalid access token: {}", e.getMessage());
                 return handleUnauthorized(exchange);
             }
 
@@ -137,4 +162,3 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
         return exchange.getResponse().setComplete();
     }
 }
-
