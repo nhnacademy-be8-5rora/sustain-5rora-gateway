@@ -123,29 +123,27 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
             String token = authHeader.substring("Bearer ".length());
             LOG.debug("token: {}", token);
 
-
+            // authorization 토큰 (=access 토큰)을 user id 로 변환
             try {
                 Claims claims = validateToken(token, config.getSecretKey());
                 LOG.debug("claims-name: {}", claims.get(USERNAME));
 
-
                 String decryptKey = KeyDecrypt.decrypt((String) claims.get(USERNAME));
                 LOG.debug("decryptKey: {}", decryptKey);
-
 
                 exchange = exchange.mutate()
                         .request(builder -> builder.header("X-USER-ID", decryptKey))
                         .build();
 
                 LOG.debug("access token validated for user: {}", claims.getSubject());
-
+                return chain.filter(exchange);
+            } catch (ExpiredJwtException e) {
+                LOG.info("Expired JWT: {}", e.getMessage());
+                // 고려: ExpiredJwt 는 440 (Login Timeout) 응답?
             } catch (Exception e) {
-                LOG.error("Invalid access token: {}", e.getMessage());
-                return handleUnauthorized(exchange);
+                LOG.error("Invalid access token: {}", e.getMessage(), e);
             }
-
-            return chain.filter(exchange);
-
+            return handleUnauthorized(exchange);
         };
     }
 
