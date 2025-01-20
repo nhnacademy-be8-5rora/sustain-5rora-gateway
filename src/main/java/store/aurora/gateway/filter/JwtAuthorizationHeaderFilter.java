@@ -1,5 +1,6 @@
 package store.aurora.gateway.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -12,13 +13,16 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 import store.aurora.gateway.util.KeyDecrypt;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<JwtAuthorizationHeaderFilter.Config> {
@@ -139,11 +143,12 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
                 return chain.filter(exchange);
             } catch (ExpiredJwtException e) {
                 LOG.info("Expired JWT: {}", e.getMessage());
-                // 고려: ExpiredJwt 는 440 (Login Timeout) 응답?
+                // ExpiredJwtException 처리 - 440 Login Timeout 사용
+                return handleUnauthorized(exchange, e.getMessage());
             } catch (Exception e) {
                 LOG.error("Invalid access token: {}", e.getMessage(), e);
+                return handleUnauthorized(exchange);
             }
-            return handleUnauthorized(exchange);
         };
     }
 
@@ -158,5 +163,25 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
     private Mono<Void> handleUnauthorized(ServerWebExchange exchange) {
         exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
         return exchange.getResponse().setComplete();
+    }
+
+    private Mono<Void> handleUnauthorized(ServerWebExchange exchange, String errorMessage) {
+        exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+
+        // JSON 응답 데이터 생성
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put("error", "Unauthorized");
+        errorDetails.put("message", errorMessage);
+
+        try {
+            // JSON 변환
+            byte[] responseBytes = new ObjectMapper().writeValueAsBytes(errorDetails);
+            return exchange.getResponse().writeWith(Mono.just(exchange.getResponse()
+                    .bufferFactory()
+                    .wrap(responseBytes)));
+        } catch (Exception e) {
+            return exchange.getResponse().setComplete();
+        }
     }
 }
