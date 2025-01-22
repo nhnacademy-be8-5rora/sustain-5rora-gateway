@@ -83,26 +83,6 @@
             <version>0.11.5</version>
         </dependency>
 
-        <!--        nhn 로그 관련 종속성-->
-        <dependency>
-            <groupId>com.toast.java.logncrash.logback</groupId>
-            <artifactId>logncrash-java-sdk3</artifactId>
-            <version>3.0.5</version>
-        </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20240303</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
-        </dependency>
-
-
     </dependencies>
 
 
