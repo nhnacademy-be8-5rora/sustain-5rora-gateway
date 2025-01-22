@@ -109,6 +109,7 @@ public class JwtAuthorizationHeaderFilter extends AbstractGatewayFilterFactory<J
                     || path.startsWith("/api/coupon/signup/welcome")
                     || path.startsWith("/api/cart")
                     || path.startsWith("/api/books/search")
+                        || path.startsWith("/api/coupon/welcome")
                 ) {
                     log.debug("로그인 안 한 사용자가 {} 요청", path);
                     return chain.filter(exchange);
