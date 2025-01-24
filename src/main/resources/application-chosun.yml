@@ -5,3 +5,8 @@ eureka:
   client:
     service-url:
       defaultZone: http://admin:1234@localhost:10155/eureka
+
+logging:
+  level:
+    root: INFO
+    org.springframework: WARN
